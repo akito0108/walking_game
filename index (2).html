@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>お散歩ミッションガチャ | Walk & Explore</title>
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="お散歩ガチャ">
+    
+    <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=6N2bGJ3BGufq1UP7O7aeLupfXrUT72h4U0oYpWAV32SkeHWKjixMleka1fR5DZBdOTNJDPfXmKKXdfTcJ48gVmBoTy8fnt4x6YVt5k1hpvBqCbbVVBefUKmmHLSyM5CS-TGxeuKsGrKzc-Qmu7mtSS6Cnr5NUrPcv7PvdvMcBOceMBaliqE5Ys2jUyqlQcrnimr6dL9IDCfgQbVecwtdSAWltG-s9njf5KkvH4BhKn_FqLgerwBxurGW-ooBqwB55tUmPnVXiejHS69HAD9qS4gzDmFX9MWyMckEmQxTWJlko3sxRvscR8aJNCXZube3" charset="UTF-8"></script><style>
+        :root {
+            --primary: #ff6f59; /* 温かみのあるテラコッタオレンジ */
+            --primary-dark: #e0533c;
+            --secondary: #4ec8de; /* 爽やかなアクアブルー */
+            --accent: #ffb703; /* 輝くゴールドイエロー */
+            --dark: #2b2d42; /* 深みのあるチャコール */
+            --light: #fdfbf7; /* 温かみのあるオフホワイト */
+            --gray: #8d99ae;
+            --success: #4abc96;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* アプリコンテナ */
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--light);
+            box-shadow: 0 0 20px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        /* ヘッダー */
+        header {
+            background-color: var(--dark);
+            color: #fff;
+            padding: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* ステータスバー（ポイント表示など） */
+        .status-bar {
+            background-color: #f0ede6;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--dark);
+            border-bottom: 1px solid #e0dbd3;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* メインコンテンツ表示域 */
+        .content-area {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* タブビューの切り替え */
+        .tab-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* --- ガチャ画面デザイン --- */
+        #gacha-view {
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .gacha-machine {
+            width: 240px;
+            height: 320px;
+            position: relative;
+            margin: 10px auto;
+        }
+
+        /* ガチャのガラスドーム */
+        .gacha-dome {
+            width: 220px;
+            height: 200px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(240,240,240,0.3) 50%, rgba(200,200,200,0.8) 100%);
+            border: 6px solid var(--dark);
+            border-radius: 110px 110px 30px 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.1), 0 8px 15px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+
+        /* ドーム内部のミニカプセルたち */
+        .capsule-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .mini-capsule {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,0,0,0.15);
+            box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2);
+        }
+
+        /* ガチャ本体の台座 */
+        .gacha-base {
+            width: 240px;
+            height: 120px;
+            background-color: var(--primary);
+            border: 6px solid var(--dark);
+            border-top: none;
+            border-radius: 10px 10px 20px 20px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        /* ダイヤル（ハンドル） */
+        .gacha-handle {
+            width: 70px;
+            height: 70px;
+            background-color: #fff;
+            border: 5px solid var(--dark);
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            left: calc(50% - 35px);
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.8s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gacha-handle::before {
+            content: '';
+            width: 50px;
+            height: 12px;
+            background-color: var(--dark);
+            border-radius: 6px;
+            position: absolute;
+        }
+
+        .gacha-handle::after {
+            content: '';
+            width: 12px;
+            height: 50px;
+            background-color: var(--dark);
+            border-radius: 6px;
+            position: absolute;
+        }
+
+        /* 取り出し口 */
+        .gacha-exit {
+            width: 54px;
+            height: 44px;
+            background-color: var(--dark);
+            border-radius: 10px 10px 0 0;
+            position: absolute;
+            bottom: 0;
+            left: calc(50% - 27px);
+            overflow: hidden;
+        }
+
+        /* 落ちてきたカプセル */
+        .dropped-capsule {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px solid var(--dark);
+            position: absolute;
+            bottom: -5px;
+            left: calc(50% - 22px);
+            cursor: pointer;
+            display: none;
+            z-index: 6;
+            animation: dropCapsule 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        @keyframes dropCapsule {
+            0% { transform: translateY(-50px) rotate(0deg); }
+            60% { transform: translateY(0px) rotate(180deg); }
+            80% { transform: translateY(-10px) rotate(220deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+
+        /* シェイクアニメーション */
+        @keyframes shake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-3px, 2px) rotate(-3deg); }
+            20% { transform: translate(2px, -2px) rotate(3deg); }
+            30% { transform: translate(-3px, -1px) rotate(-2deg); }
+            40% { transform: translate(2px, 2px) rotate(1deg); }
+            50% { transform: translate(-1px, -2px) rotate(-1deg); }
+            60% { transform: translate(2px, 1px) rotate(2deg); }
+            70% { transform: translate(-2px, 2px) rotate(-2deg); }
+            80% { transform: translate(1px, -1px) rotate(1deg); }
+            90% { transform: translate(-1px, 2px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .shaking {
+            animation: shake 0.6s ease-in-out infinite;
+        }
+
+        /* 説明用テキスト */
+        .hint-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        /* --- モーダル（カプセル開封画面） --- */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(43, 45, 66, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .mission-card {
+            background-color: #fff;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 360px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+            animation: scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .card-tag {
+            display: inline-block;
+            background-color: var(--secondary);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .card-difficulty {
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: var(--gray);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* ボタンデザイン */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 111, 89, 0.3);
+        }
+
+        .btn-primary:active {
+            background-color: var(--primary-dark);
+            transform: translateY(1px);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(74, 188, 150, 0.3);
+        }
+
+        .btn-success:active {
+            filter: brightness(0.9);
+            transform: translateY(1px);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid #e0dbd3;
+            color: var(--dark);
+        }
+
+        .btn-outline:active {
+            background-color: #f0ede6;
+        }
+
+        .card-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f0ede6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--gray);
+        }
+
+        /* --- 冒険の記録（履歴）画面デザイン --- */
+        #history-view {
+            background-color: #faf7f2;
+        }
+
+        .history-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 20px;
+        }
+
+        .history-item {
+            background-color: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid #e2e0da;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+
+        .history-mission-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--dark);
+            line-height: 1.4;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        /* --- フッターナビゲーション --- */
+        nav {
+            height: 70px;
+            background-color: #fff;
+            border-top: 1px solid #e0dbd3;
+            display: flex;
+            z-index: 10;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            gap: 4px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+        }
+
+        /* 軽快なバウンス通知 */
+        .toast {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background-color: var(--dark);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 200;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- ヘッダー -->
+        <header>🚶‍♂️ お散歩ミッションガチャ</header>
+
+        <!-- ステータスバー -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span>🎒 冒険ランク:</span>
+                <span id="adventure-rank">ビギナー</span>
+            </div>
+            <div class="status-item">
+                <span>✨ 冒険ポイント:</span>
+                <span id="adventure-points">0 EXP</span>
+            </div>
+        </div>
+
+        <!-- メイン画面域 -->
+        <div class="content-area">
+            
+            <!-- 【タブ1：ガチャ画面】 -->
+            <div id="gacha-view" class="tab-content active">
+                <div>
+                    <h2 style="text-align:center; font-size:1.1rem; color:var(--dark);">本日のミッションを引こう！</h2>
+                    <p class="hint-text" id="status-guide">ハンドルをタップして回してね！</p>
+                </div>
+
+                <div class="gacha-machine">
+                    <div class="gacha-dome" id="gacha-dome">
+                        <div class="capsule-container" id="capsule-container">
+                            <!-- JSでカラフルなカプセルをたくさん配置します -->
+                        </div>
+                    </div>
+                    <div class="gacha-base">
+                        <div class="gacha-handle" id="gacha-handle"></div>
+                        <div class="gacha-exit"></div>
+                        <!-- 落ちてくる物理カプセル -->
+                        <div class="dropped-capsule" id="dropped-capsule"></div>
+                    </div>
+                </div>
+
+                <div style="width: 100%; max-width: 280px; margin: 0 auto 10px;">
+                    <button class="btn btn-outline" id="active-mission-btn" style="display:none; border-color: var(--primary); color: var(--primary);">
+                        📌 挑戦中のミッションを見る
+                    </button>
+                </div>
+            </div>
+
+            <!-- 【タブ2：冒険の記録画面】 -->
+            <div id="history-view" class="tab-content">
+                <div class="history-title">
+                    <span>📜 クリアした冒険の書</span>
+                    <span style="font-size:0.8rem; color:var(--gray); cursor:pointer;" id="clear-history-btn">全削除</span>
+                </div>
+                <div class="history-list" id="history-list">
+                    <!-- JSで動的に履歴を追加 -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- モーダル・オーバーレイ（カプセル開封 / ミッション表示） -->
+        <div class="overlay" id="mission-overlay">
+            <div class="mission-card">
+                <div class="card-close-btn" id="close-overlay-btn">×</div>
+                <span class="card-tag" id="mission-category">カメラ</span>
+                <div class="card-difficulty" id="mission-stars">⭐⭐</div>
+                <h3 class="card-title" id="mission-title">赤い花を見つけて写真を撮る</h3>
+                <p class="card-description" id="mission-description">いつものお散歩道で、鮮やかに咲く赤い花を見つけて撮影してみましょう。普段気づかなかった自然の美しさに出会えるかも！</p>
+                
+                <div id="mission-action-group">
+                    <button class="btn btn-success" id="clear-mission-btn">✅ ミッションをクリア！</button>
+                    <button class="btn btn-primary" id="accept-mission-btn" style="display:none;">🎯 このミッションに挑戦する</button>
+                    <button class="btn btn-outline" id="share-mission-btn">🔗 冒険をみんなにシェアする</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- フッターナビゲーション -->
+        <nav>
+            <div class="nav-item active" data-target="gacha-view">
+                <span class="nav-icon">🎡</span>
+                <span>ガチャを引く</span>
+            </div>
+            <div class="nav-item" data-target="history-view">
+                <span class="nav-icon">📜</span>
+                <span>冒険の記録</span>
+            </div>
+        </nav>
+
+        <!-- トースト通知 -->
+        <div class="toast" id="toast">コピーしました！</div>
+    </div>
+
+    <script>
+        // --- サウンド生成（Web Audio API） ---
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        // コイン投入・開始時のピピッという音
+        function playStartSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.08); // A5
+                
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } catch(e) {}
+        }
+
+        // ガチャ回転中のコトコト音
+        function playSpinSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                
+                // 3回連続で小さなノイズ・ビープを鳴らして回転感を出す
+                for(let i=0; i<3; i++) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100 + i*40, now + i*0.15);
+                    gain.gain.setValueAtTime(0.05, now + i*0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.15 + 0.1);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + i*0.15);
+                    osc.stop(now + i*0.15 + 0.1);
+                }
+            } catch(e) {}
+        }
+
+        // カプセル落下音
+        function playDropSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch(e) {}
+        }
+
+        // クリア時のファンファーレ
+        function playClearSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.06, now + i * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.25);
+                });
+            } catch(e) {}
+        }
+
+
+        // --- ミッションデータベース ---
+        const MISSIONS = [
+            {
+                id: 1,
+                category: "📸 カメラ",
+                title: "赤い花を見つけて写真を撮る",
+                description: "お散歩の途中で、鮮やかに咲く「赤い花」を見つけて写真を撮りましょう。いつもの景色が少し違って見えるかも！",
+                difficulty: 1,
+                exp: 100
+            },
+            {
+                id: 2,
+                category: "🎒 冒険",
+                title: "あえて逆方向に進んでみる",
+                description: "いつものお散歩ルートを、今日だけは完全に「逆方向」からスタートして歩いてみましょう。新しい発見があるはず！",
+                difficulty: 1,
+                exp: 100
+            },
+            {
+                id: 3,
+                category: "🥤 チャレンジ",
+                title: "自販機で「珍しい飲み物」を買う",
+                description: "自動販売機で見つけた、普段は絶対に買わないような少し珍しい飲み物や、気になった飲み物を1つ買って飲んでみましょう！",
+                difficulty: 2,
+                exp: 150
+            },
+            {
+                id: 4,
+                category: "📸 カメラ",
+                title: "レトロな看板の写真を撮る",
+                description: "昭和レトロなフォントや、ちょっと味わい深いデザインの看板・標識を見つけてスマホでパシャリと撮影しましょう。",
+                difficulty: 2,
+                exp: 150
+            },
+            {
+                id: 5,
+                category: "🧘 リラックス",
+                title: "公園のベンチで30秒目を閉じる",
+                description: "近くの公園のベンチや座れる場所を見つけて、30秒間目を閉じてみてください。風の音や街の環境音に耳を傾けてみましょう。",
+                difficulty: 1,
+                exp: 80
+            },
+            {
+                id: 6,
+                category: "🐈 生き物",
+                title: "野良猫と目が合うまで待つ",
+                description: "お散歩中に猫を見つけたら、驚かせないようにそっと少し離れたところから目を合わせてみましょう。（驚かせて逃げられたら失敗！）",
+                difficulty: 2,
+                exp: 180
+            },
+            {
+                id: 7,
+                category: "🎒 冒険",
+                title: "いつもと違う角を曲がって100歩",
+                description: "普段は絶対に曲がらない細い路地や交差点を曲がり、そこから100歩カウントしながら進んでみましょう。ドキドキの小冒険です！",
+                difficulty: 2,
+                exp: 150
+            },
+            {
+                id: 8,
+                category: "📸 カメラ",
+                title: "「青いもの」を3つ見つけて撮影",
+                description: "歩きながら、目についた「青いもの」を3つ見つけてスマホで撮影してください。空、看板、車、何でもOKです！",
+                difficulty: 2,
+                exp: 150
+            },
+            {
+                id: 9,
+                category: "🥤 チャレンジ",
+                title: "今日のお散歩の『ベストショット』",
+                description: "今日のお散歩の中で、一番「エモい」と感じた瞬間や美しいと思った景色を、本気で1枚撮影してSNSやYouTubeのネタ用に保存しましょう！",
+                difficulty: 3,
+                exp: 250
+            },
+            {
+                id: 10,
+                category: "🐈 生き物",
+                title: "すれ違った犬の種類を3匹当てる",
+                description: "お散歩中、誰かにお散歩されているワンちゃんを3匹見つけて、心の中でその犬種（トイプードル、柴犬など）を当ててみましょう。",
+                difficulty: 1,
+                exp: 100
+            }
+        ];
+
+        // カプセルのカラーバリエーション
+        const CAPSULE_COLORS = [
+            { top: '#ff6f59', bottom: '#fff' },
+            { top: '#4ec8de', bottom: '#fff' },
+            { top: '#ffb703', bottom: '#fff' },
+            { top: '#4abc96', bottom: '#fff' },
+            { top: '#a2d2ff', bottom: '#fff' },
+            { top: '#ffafcc', bottom: '#fff' }
+        ];
+
+        // --- アプリのグローバル状態管理 ---
+        let state = {
+            points: 0,
+            completedMissions: [],
+            activeMission: null, // 現在挑戦中のミッション
+            isSpinning: false,
+            hasDropped: false,
+            lastDroppedMission: null
+        };
+
+        // ローカルストレージから状態をロード
+        function loadState() {
+            const saved = localStorage.getItem('walk_gacha_state');
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                    // 万が一の初期化漏れ防止
+                    if (!state.completedMissions) state.completedMissions = [];
+                } catch(e) {
+                    console.error("State load error", e);
+                }
+            }
+            updateUI();
+        }
+
+        // 状態を保存
+        function saveState() {
+            localStorage.setItem('walk_gacha_state', JSON.stringify(state));
+            updateUI();
+        }
+
+        // EXPからランクを計算
+        function getRank(exp) {
+            if (exp >= 1500) return "👑 お散歩マスター";
+            if (exp >= 800) return "🏃 エキスパート歩行者";
+            if (exp >= 300) return "🎒 見習い冒険家";
+            return "🌱 ビギナー";
+        }
+
+        // UI表示の全体更新
+        function updateUI() {
+            // ポイントとランクの描画
+            document.getElementById('adventure-points').innerText = `${state.points} EXP`;
+            document.getElementById('adventure-rank').innerText = getRank(state.points);
+
+            // 挑戦中ミッションボタンの制御
+            const activeMissionBtn = document.getElementById('active-mission-btn');
+            if (state.activeMission) {
+                activeMissionBtn.style.display = 'block';
+                document.getElementById('status-guide').innerText = '挑戦中のミッションがあるよ！';
+            } else {
+                activeMissionBtn.style.display = 'none';
+                if (!state.hasDropped && !state.isSpinning) {
+                    document.getElementById('status-guide').innerText = 'ハンドルをタップして回してね！';
+                }
+            }
+
+            // 履歴リストの描画
+            renderHistory();
+        }
+
+        // --- ドーム内ミニカプセルの配置 ---
+        function initDomeCapsules() {
+            const container = document.getElementById('capsule-container');
+            container.innerHTML = '';
+            // 25個のミニカプセルを散りばめる
+            for (let i = 0; i < 25; i++) {
+                const capsule = document.createElement('div');
+                capsule.className = 'mini-capsule';
+                const color = CAPSULE_COLORS[Math.floor(Math.random() * CAPSULE_COLORS.length)];
+                
+                // 上半分と下半分の色を変えてレトロなカプセルにする
+                capsule.style.background = `linear-gradient(135deg, ${color.top} 50%, ${color.bottom} 50%)`;
+                
+                // ランダムな配置位置
+                const left = Math.random() * 160 + 15;
+                const top = Math.random() * 110 + 50;
+                const rotation = Math.random() * 360;
+                
+                capsule.style.left = `${left}px`;
+                capsule.style.top = `${top}px`;
+                capsule.style.transform = `rotate(${rotation}deg)`;
+                
+                container.appendChild(capsule);
+            }
+        }
+
+        // --- タブ切り替え制御 ---
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+                this.classList.add('active');
+                const targetId = this.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+                
+                playStartSound();
+            });
+        });
+
+        // --- ガチャの動作ロジック ---
+        const handle = document.getElementById('gacha-handle');
+        const dome = document.getElementById('gacha-dome');
+        const droppedCapsule = document.getElementById('dropped-capsule');
+
+        handle.addEventListener('click', () => {
+            if (state.isSpinning || state.hasDropped) return;
+
+            // 挑戦中のミッションがある場合は警告（まずは完了かスキップしてもらう）
+            if (state.activeMission) {
+                showToast("挑戦中のミッションを先にクリアしよう！");
+                return;
+            }
+
+            playStartSound();
+            state.isSpinning = true;
+            document.getElementById('status-guide').innerText = '何が出るかな...？';
+
+            // ハンドル回転アニメーション
+            handle.style.transform = 'rotate(360deg)';
+
+            // ドーム内のカプセルがシャッフルされる演出
+            dome.classList.add('shaking');
+            
+            // コトコト音を定期的に鳴らす
+            const soundInterval = setInterval(playSpinSound, 200);
+
+            setTimeout(() => {
+                clearInterval(soundInterval);
+                dome.classList.remove('shaking');
+                handle.style.transform = 'rotate(0deg)'; // リセット
+                
+                // カプセル落下
+                playDropSound();
+                
+                // ランダムなミッションを決定
+                const randomMission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+                state.lastDroppedMission = randomMission;
+
+                // 落ちてくるカプセルの色を設定
+                const color = CAPSULE_COLORS[Math.floor(Math.random() * CAPSULE_COLORS.length)];
+                droppedCapsule.style.background = `linear-gradient(135deg, ${color.top} 50%, ${color.bottom} 50%)`;
+                droppedCapsule.style.display = 'block';
+
+                state.isSpinning = false;
+                state.hasDropped = true;
+                document.getElementById('status-guide').innerText = 'カプセルをタップして開けてね！';
+                
+                // スマホバイブ（対応端末のみ）
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+            }, 1800);
+        });
+
+        // 落ちてきたカプセルをクリックして開ける
+        droppedCapsule.addEventListener('click', () => {
+            if (!state.hasDropped || !state.lastDroppedMission) return;
+
+            // 開封音
+            playClearSound();
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            // カプセルを消す
+            droppedCapsule.style.display = 'none';
+            state.hasDropped = false;
+
+            // モーダルを表示
+            openMissionModal(state.lastDroppedMission, false);
+            
+            // 状態更新
+            document.getElementById('status-guide').innerText = 'ミッションに挑戦だ！';
+        });
+
+        // 挑戦中のミッションを再確認するボタン
+        document.getElementById('active-mission-btn').addEventListener('click', () => {
+            if (state.activeMission) {
+                playStartSound();
+                openMissionModal(state.activeMission, true);
+            }
+        });
+
+        // --- モーダル表示ロジック ---
+        const overlay = document.getElementById('mission-overlay');
+        
+        function openMissionModal(mission, isActive) {
+            document.getElementById('mission-category').innerText = mission.category;
+            document.getElementById('mission-stars').innerText = '⭐'.repeat(mission.difficulty) + ` (${mission.exp} EXP)`;
+            document.getElementById('mission-title').innerText = mission.title;
+            document.getElementById('mission-description').innerText = mission.description;
+
+            const clearBtn = document.getElementById('clear-mission-btn');
+            const acceptBtn = document.getElementById('accept-mission-btn');
+
+            if (isActive) {
+                // すでに挑戦中のミッションを表示する場合
+                clearBtn.style.display = 'block';
+                acceptBtn.style.display = 'none';
+            } else {
+                // ガチャから今引いたばかりのミッションを表示する場合
+                clearBtn.style.display = 'none';
+                acceptBtn.style.display = 'block';
+                // この時点で仮のターゲットに設定
+                state.activeMission = mission;
+                saveState();
+            }
+
+            overlay.style.display = 'flex';
+        }
+
+        // 閉じるボタン
+        document.getElementById('close-overlay-btn').addEventListener('click', () => {
+            overlay.style.display = 'none';
+            playStartSound();
+        });
+
+        // ミッションを受託する（ガチャから引いた時用）
+        document.getElementById('accept-mission-btn').addEventListener('click', () => {
+            overlay.style.display = 'none';
+            playStartSound();
+            showToast("ミッションを開始しました！いってらっしゃい！");
+            updateUI();
+        });
+
+        // ミッションクリア処理
+        document.getElementById('clear-mission-btn').addEventListener('click', () => {
+            if (!state.activeMission) return;
+
+            // ファンファーレとバイブ
+            playClearSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+
+            // ポイント加算
+            state.points += state.activeMission.exp;
+
+            // 履歴に追加
+            const now = new Date();
+            const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            state.completedMissions.unshift({
+                title: state.activeMission.title,
+                category: state.activeMission.category,
+                exp: state.activeMission.exp,
+                date: dateStr
+            });
+
+            // 挑戦中ミッションを空にする
+            state.activeMission = null;
+
+            saveState();
+            overlay.style.display = 'none';
+            showToast("お見事！ミッションクリア！ 🎉");
+        });
+
+        // --- シェア機能 ---
+        document.getElementById('share-mission-btn').addEventListener('click', () => {
+            const missionTitle = document.getElementById('mission-title').innerText;
+            const text = `お散歩ミッションガチャに挑戦中！
+今日のミッション：『${missionTitle}』
+#お散歩ミッションガチャ #お散歩 #冒険`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast("投稿用のテキストをコピーしました！");
+                });
+            } else {
+                showToast("コピーに対応していません。手動でコピーしてね！");
+            }
+        });
+
+        // --- 冒険の記録（履歴）のレンダリング ---
+        function renderHistory() {
+            const listContainer = document.getElementById('history-list');
+            listContainer.innerHTML = '';
+
+            if (state.completedMissions.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🧭</div>
+                        <p>まだクリアした冒険はありません。<br>ガチャを引いてお散歩に出発しよう！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            state.completedMissions.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-header">
+                        <span>${item.category}</span>
+                        <span>${item.date}</span>
+                    </div>
+                    <div class="history-mission-title">${item.title}</div>
+                    <div style="font-size: 0.75rem; color: var(--success); font-weight: bold; margin-top: 6px; text-align: right;">
+                        + ${item.exp} EXP Clear!
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        // 履歴の全削除
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            if (confirm("これまでの冒険の記録をすべて消去しますか？（獲得したEXPやランクもリセットされます）")) {
+                state.points = 0;
+                state.completedMissions = [];
+                state.activeMission = null;
+                state.hasDropped = false;
+                state.isSpinning = false;
+                saveState();
+                initDomeCapsules();
+                showToast("記録をリセットしました。");
+            }
+        });
+
+        // --- トースト表示用のヘルパー ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ページ読み込み時の初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            initDomeCapsules();
+        });
+    </script>
+</body>
+</html>
